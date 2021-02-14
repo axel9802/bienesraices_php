@@ -29,7 +29,6 @@
     @include tablet{
         flex-direction: row;
         justify-content: space-between;
-
         align-items: flex-end;
     }
 }
@@ -44,6 +43,7 @@
         align-items: center;
         opacity: 1;
         visibility: visible;
+        margin-bottom: 2rem;
     }
     a{
         color: $blanco;
