@@ -21,20 +21,29 @@
     $wc = '';
     $estacionamiento = '';
     $vendedorId = '';
-    $creado = date('Y/m/d');
 
     //Ejecutar el codigo despues de que el usuario envía el formulario
     if ($_SERVER["REQUEST_METHOD"] === 'POST') {
-       /* echo "<pre>";
+        /*echo "<pre>";
         var_dump($_POST);
-        echo "</pre>";*/
-        $titulo = $_POST['titulo'];
-        $precio = $_POST['precio'];
-        $descripcion = $_POST['descripcion'];
-        $habitaciones = $_POST['habitaciones'];
-        $wc = $_POST['wc'];
-        $estacionamiento = $_POST['estacionamiento'];
-        $vendedorId = $_POST['vendedor'];
+        echo "</pre>";
+
+        echo "<pre>";
+        var_dump($_FILES);//Para imagenes
+        echo "</pre>";
+        exit;*/
+        //Si alguien coloca codigo sql esta funcion va deshabilitarlo y guardarlo como entidad en la DB para que no sea ejecutable
+        $titulo = mysqli_real_escape_string($db,$_POST['titulo']);
+        $precio = mysqli_real_escape_string($db,$_POST['precio']);
+        $descripcion = mysqli_real_escape_string($db,$_POST['descripcion']);
+        $habitaciones = mysqli_real_escape_string($db,$_POST['habitaciones']);
+        $wc = mysqli_real_escape_string($db,$_POST['wc']);
+        $estacionamiento = mysqli_real_escape_string($db,$_POST['estacionamiento']);
+        $vendedorId = mysqli_real_escape_string($db,$_POST['vendedor']);
+        $creado = date('Y/m/d');
+
+        //Asignar files hacia una variable
+        $imagen = $_FILES['imagen'];
 
         //Validando campos vacios
         if (!$titulo) {
@@ -58,6 +67,15 @@
         if (!$vendedorId) {
             $errores[] = "Debes elegir un vendedor obligatoriamente";
         }
+        if (!$imagen['name'] || $imagen['error']) {
+            $errores[] = "La imagen es obligatoria";
+        }
+        //Validar por tamaño para la imagen (1MB máximo)
+            //Primero convertir de bytes a MB
+            $medida = 1000*1000;
+        if ($imagen['size'] > $medida) {
+            $errores[] = "La imagen es muy pesada (Máximo 1MB)";
+        }
 
         /*echo "<pre>";
         var_dump($errores);
@@ -65,14 +83,34 @@
 
         //Revisar que el arreglo de errores esté vacío para que se inserten los datos
         if (empty($errores)) {
+
+            /**Subida de archivos**/
+            //Crear carpeta en la raiz del proyecto
+            $carpetaImagenes = '../../imagenes/';
+
+            //is_dir nos retorna si una carpeta existe o no
+            if (!is_dir($carpetaImagenes)) {
+                mkdir($carpetaImagenes);//mkdir es una funcion para crear la carpeta en esa direccion
+            }
+            
+            //Generar un nombre único
+            $nombreImagen = md5(uniqid(rand(), true));
+
+
+
+            //Subir la imagen -> Mueve la imagen de tmp_name hacia carpetaimagenes con su respectivo nombre de archivo
+            move_uploaded_file($imagen['tmp_name'], $carpetaImagenes . $nombreImagen . ".jpg");
+
              //Insertar en la DB
-            $query = "INSERT INTO propiedades (titulo,precio,descripcion,habitaciones,wc,estacionamiento,creado,vendedorId) VALUES ('$titulo','$precio','$descripcion','$habitaciones','$wc','$estacionamiento','$creado','$vendedorId')";
+            $query = "INSERT INTO propiedades (titulo,precio,imagen,descripcion,habitaciones,wc,estacionamiento,creado,vendedorId) VALUES ('$titulo','$precio','$nombreImagen','$descripcion','$habitaciones','$wc','$estacionamiento','$creado','$vendedorId')";
             //echo $query;
             $resultado = mysqli_query($db, $query);
 
             if ($resultado) {
                 //Redireccionar al usuario para evitar que presionen muchas veces el boton 'Crear Propiedad'
-                header('Location: /admin'); //header solamente funciona si NO HAY nada de HTML previo
+                    //header solamente funciona si NO HAY nada de HTML previo
+                    //Despues del ? va el query string (url con parametros)
+                header('Location: /admin?resultado=1'); 
             }
         }
    
@@ -91,7 +129,7 @@
         </div> 
         <?php endforeach; ?>
 
-        <form class="formulario" method="POST" action="/admin/propiedades/crear.php">
+        <form class="formulario" method="POST" action="/admin/propiedades/crear.php" enctype="multipart/form-data">
             <fieldset>
                 <legend>Información General</legend>
 
@@ -102,7 +140,7 @@
                 <input type="number" id="precio" name="precio" placeholder="Precio Propiedad" min="1" value="<?php echo $precio; ?>">
 
                 <label for="imagen">Imagen: </label>
-                <input type="file" id="imagen" accept="image/jpeg, image/png"> 
+                <input type="file" id="imagen" accept="image/jpeg, image/png" name="imagen"> 
 
                 <label for="descripcion">Descripcion: </label>
                 <textarea name="descripcion" id="descripcion"><?php echo $descripcion; ?></textarea>
