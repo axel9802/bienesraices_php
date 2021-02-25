@@ -1,16 +1,22 @@
 <?php 
 
-//Validar que sea un ID válido en la URL
+    //Validar que sea un ID válido en la URL
     $id = $_GET['id'];
     $id = filter_var($id, FILTER_VALIDATE_INT);
 
     if (!$id) {
         header('Location: /admin');
     }
-    var_dump($id);
+    //var_dump($id);
     //Base de datos
     require '../../includes/config/database.php';
     $db = conectarDB();
+
+    //Obtener los datos de la propiedad
+    $consulta = "SELECT * FROM propiedades WHERE id = ${id}";
+    $resultado = mysqli_query($db, $consulta);
+    $propiedad = mysqli_fetch_assoc($resultado);
+    
 
     //Consultar DB para obtener los vendedores
     $consulta = "SELECT * FROM vendedores";
@@ -22,13 +28,14 @@
     //Arreglo con mensajes de errores
     $errores = [];
 
-    $titulo = '';
-    $precio = '';
-    $descripcion = '';
-    $habitaciones = '';
-    $wc = '';
-    $estacionamiento = '';
-    $vendedorId = '';
+    $titulo = $propiedad['titulo'];
+    $precio = $propiedad['precio'];
+    $descripcion = $propiedad['descripcion'];
+    $habitaciones = $propiedad['habitaciones'];
+    $wc = $propiedad['wc'];
+    $estacionamiento = $propiedad['estacionamiento'];
+    $vendedorId = $propiedad['vendedorId'];
+    $imagenPropiedad = $propiedad['imagen'];
 
     //Ejecutar el codigo despues de que el usuario envía el formulario
     if ($_SERVER["REQUEST_METHOD"] === 'POST') {
@@ -75,9 +82,6 @@
         if (!$vendedorId) {
             $errores[] = "Debes elegir un vendedor obligatoriamente";
         }
-        if (!$imagen['name'] || $imagen['error']) {
-            $errores[] = "La imagen es obligatoria";
-        }
         //Validar por tamaño para la imagen (1MB máximo)
             //Primero convertir de bytes a MB
             $medida = 1000*1000;
@@ -92,7 +96,7 @@
         //Revisar que el arreglo de errores esté vacío para que se inserten los datos
         if (empty($errores)) {
 
-            /**Subida de archivos**/
+            // /**Subida de archivos**/
             //Crear carpeta en la raiz del proyecto
             $carpetaImagenes = '../../imagenes/';
 
@@ -101,16 +105,27 @@
                 mkdir($carpetaImagenes);//mkdir es una funcion para crear la carpeta en esa direccion
             }
             
-            //Generar un nombre único
-            $nombreImagen = md5(uniqid(rand(), true));
+            $nombreImagen = '';
 
+            if ($imagen['name']) {
 
+                unlink($carpetaImagenes . $propiedad['imagen'] . '.jpg');//Si hay una nueva imagen se debe eliminar la imagen previa (unlink)
 
-            //Subir la imagen -> Mueve la imagen de tmp_name hacia carpetaimagenes con su respectivo nombre de archivo
-            move_uploaded_file($imagen['tmp_name'], $carpetaImagenes . $nombreImagen . ".jpg");
+                //Generar un nombre único
+                $nombreImagen = md5(uniqid(rand(), true));
+
+                //Subir la imagen -> Mueve la imagen de tmp_name hacia carpetaimagenes con su respectivo nombre de archivo
+                move_uploaded_file($imagen['tmp_name'], $carpetaImagenes . $nombreImagen . ".jpg");
+            } else {
+                $nombreImagen = $propiedad['imagen'];
+            }
+
+            
+            
 
              //Insertar en la DB
-            $query = "INSERT INTO propiedades (titulo,precio,imagen,descripcion,habitaciones,wc,estacionamiento,creado,vendedorId) VALUES ('$titulo','$precio','$nombreImagen','$descripcion','$habitaciones','$wc','$estacionamiento','$creado','$vendedorId')";
+            $query = "UPDATE propiedades SET titulo = '${titulo}', precio = '${precio}', imagen = '${nombreImagen}', descripcion = '${descripcion}', habitaciones = ${habitaciones}, wc = ${wc}, 
+                        estacionamiento = ${estacionamiento}, vendedorId = ${vendedorId} WHERE id = ${id}";
             //echo $query;
             $resultado = mysqli_query($db, $query);
 
@@ -118,7 +133,7 @@
                 //Redireccionar al usuario para evitar que presionen muchas veces el boton 'Crear Propiedad'
                     //header solamente funciona si NO HAY nada de HTML previo
                     //Despues del ? va el query string (url con parametros)
-                header('Location: /admin?resultado=1'); 
+                header('Location: /admin?resultado=2'); 
             }
         }
    
@@ -137,7 +152,7 @@
         </div> 
         <?php endforeach; ?>
 
-        <form class="formulario" method="POST" action="/admin/propiedades/crear.php" enctype="multipart/form-data">
+        <form class="formulario" method="POST" enctype="multipart/form-data">
             <fieldset>
                 <legend>Información General</legend>
 
@@ -149,6 +164,8 @@
 
                 <label for="imagen">Imagen: </label>
                 <input type="file" id="imagen" accept="image/jpeg, image/png" name="imagen"> 
+
+                <img src="/imagenes/<?php echo $imagenPropiedad.'.jpg'; ?>" class="imagen-small">
 
                 <label for="descripcion">Descripcion: </label>
                 <textarea name="descripcion" id="descripcion"><?php echo $descripcion; ?></textarea>

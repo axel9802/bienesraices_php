@@ -11,7 +11,7 @@
     <header class="header <?php echo $inicio ? 'inicio' : '' ?>">
         <div class="contenedor contenido-header">
             <div class="barra">
-                <a href="http://localhost:90/bienesraices_php/">
+                <a href="/">
                     <img src="/build/img/logo.svg" alt="Logotipo de Bienes Raices">
                 </a> 
                 <div class="mobile-menu">

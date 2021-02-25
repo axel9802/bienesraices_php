@@ -1,7 +1,13 @@
 @include tablet{
     .contenedor-anuncios{
         @include grid(3,2rem);
+        .img-anuncio{
+            height: 30rem;
+            
+            background-size: contain;
+        }
     }
+    
 }
 
 .anuncio{
@@ -15,6 +21,7 @@
     h3, p{
         margin: 0;
     }
+    
 }
 
 .precio{
