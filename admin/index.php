@@ -1,12 +1,6 @@
 <?php 
-
-    session_start();
-    // echo "<pre>";
-    // var_dump ($_SESSION); 
-    // echo "</pre>";
-
-    //Si existe el usuario entonces SI esta autenticado
-    $auth = $_SESSION['login'];
+    require '../includes/funciones.php';
+    $auth = estaAutenticado();
 
     //Si no existe el usuario se va redirigir
     if (!$auth) {
@@ -51,7 +45,6 @@
     }
     
     //Incluye un template
-    require '../includes/funciones.php';
     incluirTemplate('header');
 ?>
 
