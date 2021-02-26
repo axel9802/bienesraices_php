@@ -3,8 +3,8 @@
         @include grid(3,2rem);
         .img-anuncio{
             height: 30rem;
-            
-            background-size: contain;
+            min-width: 24.5rem;
+           object-fit: fill;
         }
     }
     
@@ -46,4 +46,8 @@
             font-weight: $black;
         }
     }
+}
+.img-anuncio{
+    height: 37rem;
+    object-fit: cover;  
 }

@@ -1,5 +1,18 @@
 <?php 
 
+    session_start();
+    // echo "<pre>";
+    // var_dump ($_SESSION); 
+    // echo "</pre>";
+
+    //Si existe el usuario entonces SI esta autenticado
+    $auth = $_SESSION['login'];
+
+    //Si no existe el usuario se va redirigir
+    if (!$auth) {
+        header('Location: /');
+    }
+
     //1.Importar la conexion
     require '../includes/config/database.php';
     $db = conectarDB();

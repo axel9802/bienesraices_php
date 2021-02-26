@@ -18,7 +18,7 @@
 
             <div class="anuncio">
 
-                <img loading="lazy" src="/imagenes/<?php echo $propiedad['imagen'] . '.jpg'; ?>" alt="Anuncio">   
+                <img class="img-anuncio" loading="lazy" src="/imagenes/<?php echo $propiedad['imagen'] . '.jpg'; ?>" alt="Anuncio">   
 
                 <div class="contenido-anuncio">
                     <h3><?php echo $propiedad['titulo']; ?></h3>
